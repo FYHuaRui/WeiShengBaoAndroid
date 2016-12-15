@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Weipanbao</string>
+    <string name="more">更多</string>
+    <string name="individual_property">个人资产(元)</string>
+    <string name="yinYuanQuan">银元券</string>
+    <string name="live">直播</string>
+    <string name="buy_up">买涨</string>
+    <string name="buy_down">买跌</string>
+    <string name="settings">设置</string>
+    <string name="company_name">深圳市方圆华睿信息科技有限公司</string>
+    <string name="modify_nickname">修改昵称</string>
+    <string name="confirm_modify">确认修改</string>
+    <string name="joint_purchase_hall">合买大厅</string>
+    <string name="my_purchase_hall">我的合买</string>
+    <string name="profit_index">盈利指数</string>
+    <string name="myself">我</string>
+    <string name="customer_service">客服</string>
+    <string name="retrive_cash">提现</string>
+    <string name="charge">充值</string>
+    <string name="important_alert">重要提醒</string>
+    <string name="opinion_feedback">建议反馈</string>
+</resources>
