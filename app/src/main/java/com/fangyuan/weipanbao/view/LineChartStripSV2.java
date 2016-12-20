@@ -11,12 +11,16 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.fangyuan.weipanbao.model.PriceModel;
 import com.fangyuan.weipanbao.model.StripLineChartModel;
 import com.fangyuan.weipanbao.util.MathUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Administrator on 2016/12/13 0013.
@@ -27,9 +31,11 @@ import com.fangyuan.weipanbao.util.MathUtil;
  * <p>
  * 1,draw x y axis,kedu, data diff/px diff;
  * 2,draw line
+ *
+ * 每个priceModel 图表中对应的x轴区间和此区间 中线，这种坐标到 对象的关系 保存起来，
  */
 
-public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callback {
+public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Callback, ScaleGestureDetector.OnScaleGestureListener {
 
 
     //用于控制SurfaceView
@@ -40,6 +46,8 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
     private Canvas canvas;
     private Matrix matrix;
 
+
+    private float mScaleFactor=1.0f;
     /**
      * 图片的坐标
      */
@@ -60,11 +68,20 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
     private final Paint linePaint;
     private final Paint numberPaint;
     private final Paint pointPaint;
+    private float lastScaleFactor;
+    /**
+     * 绘图时，每个priceModel对象 和它对应的x轴坐标 形成的map
+     */
+    Map<PriceModel,Float> priceModelXCoordMap=new HashMap<>();
+    private final Paint stripPaint;
+
+    float lastX;
+    private final ScaleGestureDetector scaleGestureDetector;
 
     /**
      * SurfaceView初始化函数
      */
-    public LineChartStripSV(Context context, AttributeSet attrs) {
+    public LineChartStripSV2(Context context, AttributeSet attrs) {
         super(context, attrs);
         sfh = this.getHolder();
         sfh.addCallback(this);
@@ -85,7 +102,13 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
         pointPaint.setStyle(Paint.Style.STROKE);
         pointPaint.setStrokeWidth((float) 3);
 
+        stripPaint = new Paint();
+        stripPaint.setColor(Color.RED);
+        stripPaint.setStyle(Paint.Style.FILL);
+
         setFocusable(true);
+
+        scaleGestureDetector = new ScaleGestureDetector(context,this);
     }
 
     /**
@@ -164,26 +187,48 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
                     canvas.drawText(startX2 + "", startX, startY - i * pxUnit, numberPaint);
                 }
             }
-            //2,draw y axis
+            //2,draw y axis and x axis time text
             endY = chartModel.topPadding;
             //chartModel.axisX.setViewSide(screenW);
             int xAxisLen=screenW - chartModel.leftPadding - chartModel.rightPadding;
-            chartModel.axisX.setAxisPxLength(xAxisLen);
+            int dataSize=chartModel.getDataSize();
+            chartModel.axisX.setAxisPxLength(xAxisLen,dataSize);
             kedu = chartModel.axisX.kedu;
-            keduCount = chartModel.axisX.keduCount;
+            //keduCount = chartModel.axisX.keduCount;
             Log.i("info2", "axisX keduCount=" + keduCount);
             Log.i("info2", "axisX kedu=" + kedu);
 //----------------------
-            for (int i = 0; i < keduCount; i++) {
-                canvas.drawLine(startX + (i * kedu), startY, startX + (i * kedu), endY, axisPaint);
+            int keduStride = chartModel.axisX.getKeduStride();
+
+            canvas.drawLine(startX , startY, startX , endY, axisPaint);
+            for (int i = 0; i < dataSize; i++) {
+               // if(i==0){
+                    //canvas.drawLine(startX , startY, startX , endY, axisPaint);
+                    //每个大的刻度处，画上 时间 文本
+                   // PriceModel priceModel = chartModel.priceModelListVisible.get(i);
+                    //String time = priceModel.getTime();
+                    //canvas.drawText(time,startX + ((i+1) * kedu), startY,numberPaint);
+               // }else
+            if((i+1)%keduStride==0){
+                    canvas.drawLine(startX + ((i+1) * kedu), startY, startX + ((i+1) * kedu), endY, axisPaint);
+                    //每个大的刻度处，画上 时间 文本
+                    PriceModel priceModel = chartModel.priceModelListVisible.get(i);
+                    String time = priceModel.getTime();
+                    canvas.drawText(time,startX + ((i+1) * kedu), startY,numberPaint);
+
+                    priceModelXCoordMap.put(priceModel,startX + ((i+1) * kedu));
+                }else {
+                    PriceModel priceModel = chartModel.priceModelListVisible.get(i);
+                    priceModelXCoordMap.put(priceModel,startX + ((i+1) * kedu));
+                }
             }
             //数据分布分为两种情况，
             //1,平铺，所有数据平均铺开，显示在屏幕上
             //2，顺序排列，从左至右顺序排列，不一定到达屏幕宽度
             //draw x kedu  value(12.1 12.5 12.9)
-            int dataSize = chartModel.priceModelListVisible.size();
+            //int dataSize = chartModel.priceModelListVisible.size();
             //float keduCapacity = dataSize / keduCount * 1.0f;
-            float keduCapacity = 3;
+           /* float keduCapacity = 3;
             int keduCapacityI = (int) Math.floor(keduCapacity);
             //two point px distance
             float dataXStride = kedu / keduCapacityI * 1.000f;
@@ -194,7 +239,7 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
                 String time = priceModel.time;
                 //startY+3-->startY+30
                 canvas.drawText(time, startX + (i * kedu), startY + 30, numberPaint);
-            }
+            }*/
             //3,draw line,strip
             //draw points
             chartModel.axisY.setAxisMaxMinValue(yMaxValue,yMinValue);
@@ -202,6 +247,7 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
 
             Path path=new Path();
             Log.i("info2","startY="+startY);
+        int xAxisKedu=    chartModel.axisX.getKedu();
             for (int i = 0; i < dataSize; i++) {
                 PriceModel priceModel = chartModel.priceModelListVisible.get(i);
                 float fiveDayAvgPrice = priceModel.getFiveDayAvgPrice();
@@ -209,7 +255,7 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
                 //int  pricePx= (int) (fiveDayAvgPrice*unit);
                 float pricePx = (priceDiff * unit);
                 float priceY = startY - pricePx;
-                float priceX=startX+((i+1)*dataXStride);
+                float priceX=startX+((i+1)*xAxisKedu);
 
                 //canvas.drawCircle(priceX, priceY, 5, pointPaint);
                 Log.i("info2","priceX="+priceX+"-priceY="+priceY);
@@ -219,6 +265,7 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
                     path.lineTo(priceX,priceY);
                 }
             }
+
             //draw lines
             canvas.drawPath(path,pointPaint);
             //draw strip(a vertical line through vertical rectangle)
@@ -230,9 +277,32 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
             float openPriceDiff=    openPrice-yMinValue;
              float openPriceY=   openPriceDiff*lenValueAspect;
                 openPriceY=startY-openPriceY;
-                //float openPriceX=
-                //int openPriceY=openPrice*
-                //draw vertical line
+                Float modelXCoord = priceModelXCoordMap.get(priceModel);
+                float openPriceX=modelXCoord-4;
+
+                float closePriceDiff=closePrice-yMinValue;
+                float closePriceY=closePriceDiff*lenValueAspect;
+                closePriceY=startY-closePriceY;
+                float closePriceX=modelXCoord+4;
+
+                int color = priceModel.getColor();
+                stripPaint.setColor(color);
+
+                canvas.drawRect(openPriceX,openPriceY,closePriceX,closePriceY,stripPaint);
+                Log.i("info2","openX="+openPriceX+"-openY="+openPriceY+"-closeX="+closePriceX+"-closeY="+closePriceY);
+                float topPrice = priceModel.getTopPrice();
+                float bottomPrice = priceModel.getBottomPrice();
+
+                float topPriceDiff=topPrice-yMinValue;
+                float topPriceDiffPx=topPriceDiff*lenValueAspect;
+                float topPriceY=startY-topPriceDiffPx;
+
+                float bottomPriceDiff=bottomPrice-yMinValue;
+                float bottomPriceDiffPx=bottomPriceDiff*lenValueAspect;
+                float bottomPriceY=startY-bottomPriceDiffPx;
+
+                float topPriceX=priceModelXCoordMap.get(priceModel);
+                canvas.drawLine(topPriceX,topPriceY,topPriceX,bottomPriceY,stripPaint);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -247,7 +317,94 @@ public class LineChartStripSV extends SurfaceView implements SurfaceHolder.Callb
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        //区分单点 和两点触摸，
+        //单点触摸 区分 长按和拖动
+        //两点触摸用于缩放
+        int pointerCount = event.getPointerCount();
+        Log.i("info2","pointerCount="+pointerCount);
+        switch (pointerCount){
+            case 1:
+                //判断水平滑动距离
+                switch (event.getAction()){
+                    case MotionEvent.ACTION_DOWN:
+                       lastX=  event.getX();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                     float currX=   event.getX();
+                     float xDiff=   currX-lastX;
+                        //Log.i("info2","xDiff="+xDiff);
+                       int moveDelta= (int) xDiff / 10;
+                        Log.i("info2","moveDelta="+moveDelta);
+                        boolean ifReDraw = chartModel.cutPriceModel2(-moveDelta);
+                        if(ifReDraw){
+                            invalidate();
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        break;
+                }
+                break;
+            case 2:
+                scaleGestureDetector.onTouchEvent(event);
+                break;
+        }
+
         return true;
+    }
+
+    @Override
+    public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+        //scaleFactor，缩放图表时，同时可以缩放strip
+        float scaleFactor = scaleGestureDetector.getScaleFactor();
+        mScaleFactor=scaleFactor;
+        Log.i("info2","scaleFactor="+scaleFactor);
+        if(lastScaleFactor==0){
+            lastScaleFactor=scaleFactor;
+            //return false;
+           // return true;
+        }else {
+       /* if(scaleFactor==1.0){
+            //return false;
+            return true;
+        }else*/
+            if (scaleFactor < 1.0) {
+                //缩小，最多显示50条数据
+                float abs = Math.abs(scaleFactor - lastScaleFactor);
+                if(abs>=0.1){
+                    float scaleAspect = 1 + abs;
+                    Log.i("info2","scale down,scaleAspect="+scaleAspect);
+                    boolean ifScaleDataSuccess = chartModel.scaleData(scaleAspect);
+                    if (ifScaleDataSuccess) {
+                        invalidate();
+                    }
+                    lastScaleFactor=scaleFactor;
+                }
+
+            } else if (scaleFactor > 1.0) {
+                //放大，最少显示15条数据
+                float abs = Math.abs(scaleFactor - lastScaleFactor);
+                if(abs>=0.1){
+                    float scaleAspect = 1 - abs;
+                    boolean ifScaleDataSuccess = chartModel.scaleData(scaleAspect);
+                    if (ifScaleDataSuccess) {
+                        invalidate();
+                    }
+                }
+                lastScaleFactor = scaleFactor;
+            }
+        }
+        //return true;
+        return false;
+    }
+
+    @Override
+    public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+        return true;
+    }
+
+    @Override
+    public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+
     }
 
     /**

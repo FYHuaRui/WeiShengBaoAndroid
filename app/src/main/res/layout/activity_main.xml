@@ -143,7 +143,7 @@
         android:layout_height="350dp"
         android:background="#ff8080">
 
-        <com.fangyuan.weipanbao.view.LineChartStripSV
+        <com.fangyuan.weipanbao.view.LineChartStripSV2
             android:id="@+id/sv_chart"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

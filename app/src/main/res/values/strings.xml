@@ -19,4 +19,10 @@
     <string name="charge">充值</string>
     <string name="important_alert">重要提醒</string>
     <string name="opinion_feedback">建议反馈</string>
+    <string name="common_issues">常见问题</string>
+    <string name="history_feedback">历史反馈</string>
+    <string name="i_want_feedback">我要反馈</string>
+    <string name="issue_content">问题内容</string>
+    <string name="user_feedback">用户反馈</string>
+    <string name="catogory_tabs">分类标签</string>
 </resources>

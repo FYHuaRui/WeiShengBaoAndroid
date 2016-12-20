@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,10 +16,20 @@ import com.fangyuan.weipanbao.R;
 import com.fangyuan.weipanbao.adapter.ArrayWheelAdapter;
 
 import com.fangyuan.weipanbao.model.AxisModel;
+import com.fangyuan.weipanbao.model.PriceModel;
 import com.fangyuan.weipanbao.model.StripLineChartModel;
-import com.fangyuan.weipanbao.view.LineChartStripSV;
+import com.fangyuan.weipanbao.util.HttpPostUtil;
+import com.fangyuan.weipanbao.view.LineChartStripSV2;
 import com.fangyuan.weipanbao.view.OnWheelScrollListener;
 import com.fangyuan.weipanbao.view.WheelView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 public class MainActivity extends Activity implements View.OnClickListener, OnWheelScrollListener {
 
@@ -46,14 +57,72 @@ public class MainActivity extends Activity implements View.OnClickListener, OnWh
         wheelView.setViewAdapter(arrWheelAdapter);
         wheelView.addScrollingListener(this);
 
-        LineChartStripSV svChart = (LineChartStripSV) findViewById(R.id.sv_chart);
+        LineChartStripSV2 svChart = (LineChartStripSV2) findViewById(R.id.sv_chart);
 
         AxisModel axisX=new AxisModel(10);
         AxisModel axisY=new AxisModel(10);
-        StripLineChartModel chartModel=new StripLineChartModel(10,10,10,10,axisX,axisY);
+
+        List<PriceModel> priceModelList=new ArrayList<>();
+
+
+        for (int i = 0; i <70 ; i++) {
+            float fiveDayAvgPrice = get5DayAvgPrice();
+            PriceModel priceModel=new PriceModel(getTopPrice(),getBottomPrice(),getOpenClosePrice(),getOpenClosePrice(),fiveDayAvgPrice,""+i);//"12月"+i+"日"
+            priceModel.setRectCoordOffset(this,5);
+            priceModelList.add(priceModel);
+            Log.i("info2","time="+i+"-5dayAvg="+fiveDayAvgPrice);
+        }
+            //bottomPadding 10-->50
+        StripLineChartModel chartModel=new StripLineChartModel(10,10,50,10,axisX,axisY,priceModelList);
         svChart.setData(chartModel);
+
+       //new HttpPostUtil().httpUrlConnection();
     }
 
+    private float getOpenClosePrice(){
+        //40.000-80.000
+        //4-8
+        //open close 3.630-3.666
+        //bottom 3.600-3.630/      avg 3.600-3.699/    /top 3.666-3.699
+        Random random=new Random();
+        float randomValue = random.nextFloat() * 0.036f+3.630f;
+       float randomValueFormat=  (float)(Math.round(randomValue*1000))/1000;
+    Log.i("info2","random value="+randomValueFormat);
+    return randomValueFormat;
+    }
+    private float get5DayAvgPrice(){
+        //20.000-100.000
+        //open close 3.630-3.666
+        //bottom 3.600-3.630/      avg 3.600-3.699/    /top 3.666-3.699
+        Random random=new Random();
+        float randomValue = random.nextFloat() * 0.099f+3.600f;
+        float randomValueFormat=  (float)(Math.round(randomValue*1000))/1000;
+        Log.i("info2","random value="+randomValueFormat);
+        return randomValueFormat;
+    }
+    private float getTopPrice(){
+        //80--100
+        //3.666-3.699/
+        // 0-1
+
+        Random random=new Random();
+        float randomValue = random.nextFloat() * 0.033f+3.666f;
+        float randomValueFormat=  (float)(Math.round(randomValue*1000))/1000;
+        Log.i("info2","random value="+randomValueFormat);
+        return randomValueFormat;
+    }
+    private float getBottomPrice(){
+        //20--40
+        //2-4
+        //open close 3.630-3.666
+        //bottom 3.600-3.630/      avg 3.600-3.699/    /top 3.666-3.699
+        Random random=new Random();
+        float randomValue = random.nextFloat() * 0.030f+3.600f;
+        //keep 3 fraction 保留三位小数
+        float randomValueFormat=  (float)(Math.round(randomValue*1000))/1000;
+        Log.i("info2","random value="+randomValueFormat);
+        return randomValueFormat;
+    }
     @Override
     public void onClick(View view) {
         switch (view.getId()) {

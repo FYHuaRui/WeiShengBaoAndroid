@@ -9,10 +9,10 @@ import com.fangyuan.weipanbao.R;
  * Created by Administrator on 2016/12/15.
  */
 
-public class OpinionFeedbackActivity extends Activity{
+public class UserFeedbackActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_opinion_feedback);
+        setContentView(R.layout.activity_user_feedback);
     }
 }
