@@ -9,7 +9,9 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
@@ -31,7 +33,7 @@ import java.util.Map;
  * <p>
  * 1,draw x y axis,kedu, data diff/px diff;
  * 2,draw line
- *
+ * <p>
  * 每个priceModel 图表中对应的x轴区间和此区间 中线，这种坐标到 对象的关系 保存起来，
  */
 
@@ -47,7 +49,7 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
     private Matrix matrix;
 
 
-    private float mScaleFactor=1.0f;
+    private float mStripScaleFactor = 1.0f;
     /**
      * 图片的坐标
      */
@@ -68,15 +70,41 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
     private final Paint linePaint;
     private final Paint numberPaint;
     private final Paint pointPaint;
-    private float lastScaleFactor;
+    /**
+     * 从此scaleFactor 开始，后面的scaleFactor（假设名为 factorN） 都和它比较，达到一定差值，开始 缩放数据，
+     * 则factorN成为新的 baseScaleFactor,
+     * 所以叫base，即基准值
+     *
+     */
+    private float baseScaleFactor;
+
+    /**
+     * init offset,unit dp
+     */
+    private int stripSideOffsetDp=6;
+    /**
+     * max offset,dp
+     */
+    private int stripSideOffsetDpMax=9;
+    private int stripSideOffsetDpMin=2;
+    /**
+     * init offset,px
+     */
+    private float stripSideOffsetPx=-1;
+    private float stripSideOffsetPxMax=0;
+    private float stripSideOffsetPxMin=0;
     /**
      * 绘图时，每个priceModel对象 和它对应的x轴坐标 形成的map
      */
-    Map<PriceModel,Float> priceModelXCoordMap=new HashMap<>();
+    Map<PriceModel, Float> priceModelXCoordMap = new HashMap<>();
     private final Paint stripPaint;
 
     float lastX;
     private final ScaleGestureDetector scaleGestureDetector;
+    /**
+     * strip width scale aspect,
+     */
+    private int scaleDiffInt;
 
     /**
      * SurfaceView初始化函数
@@ -108,7 +136,12 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
 
         setFocusable(true);
 
-        scaleGestureDetector = new ScaleGestureDetector(context,this);
+        scaleGestureDetector = new ScaleGestureDetector(context, this);
+
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        stripSideOffsetPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, stripSideOffsetDp, displayMetrics);
+        //stripSideOffsetPxMax = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, stripSideOffsetDpMax, displayMetrics);
+        //stripSideOffsetPxMin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, stripSideOffsetDpMin, displayMetrics);
     }
 
     /**
@@ -134,6 +167,7 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
     public void draw() {
         try {
             canvas = sfh.lockCanvas();
+            //use black color clear canvas
             canvas.drawRGB(0, 0, 0);
 
             //根据宽高的比例来 画图表
@@ -155,7 +189,7 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
             float endY = startY;
 
             //chartModel.axisY.setViewSide(screenH);
-            int yAxisLen=screenH - chartModel.topPadding - chartModel.bottomPadding;
+            int yAxisLen = screenH - chartModel.topPadding - chartModel.bottomPadding;
             chartModel.axisY.setAxisPxLength(yAxisLen);
             float kedu = chartModel.axisY.kedu;
             int keduCount = chartModel.axisY.keduCount;
@@ -179,7 +213,7 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
             float valueUnit = valueDiff / keduCount;
             float axisLength = chartModel.axisY.getAxisLength();
             float pxUnit = axisLength / keduCount;
-         float lenValueAspect= axisLength/valueDiff;
+            float lenValueAspect = axisLength / valueDiff;
             for (int i = 0; i < keduCount; i++) {
                 float startX2 = yMinValue + i * valueUnit;
                 startX2 = MathUtil.get3FractionFloat(startX2);
@@ -190,9 +224,9 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
             //2,draw y axis and x axis time text
             endY = chartModel.topPadding;
             //chartModel.axisX.setViewSide(screenW);
-            int xAxisLen=screenW - chartModel.leftPadding - chartModel.rightPadding;
-            int dataSize=chartModel.getDataSize();
-            chartModel.axisX.setAxisPxLength(xAxisLen,dataSize);
+            int xAxisLen = screenW - chartModel.leftPadding - chartModel.rightPadding;
+            int dataSize = chartModel.getDataSize();
+            chartModel.axisX.setAxisPxLength(xAxisLen, dataSize);
             kedu = chartModel.axisX.kedu;
             //keduCount = chartModel.axisX.keduCount;
             Log.i("info2", "axisX keduCount=" + keduCount);
@@ -200,54 +234,39 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
 //----------------------
             int keduStride = chartModel.axisX.getKeduStride();
 
-            canvas.drawLine(startX , startY, startX , endY, axisPaint);
+            canvas.drawLine(startX, startY, startX, endY, axisPaint);
             for (int i = 0; i < dataSize; i++) {
-               // if(i==0){
-                    //canvas.drawLine(startX , startY, startX , endY, axisPaint);
-                    //每个大的刻度处，画上 时间 文本
-                   // PriceModel priceModel = chartModel.priceModelListVisible.get(i);
-                    //String time = priceModel.getTime();
-                    //canvas.drawText(time,startX + ((i+1) * kedu), startY,numberPaint);
-               // }else
-            if((i+1)%keduStride==0){
-                    canvas.drawLine(startX + ((i+1) * kedu), startY, startX + ((i+1) * kedu), endY, axisPaint);
+                // if(i==0){
+                //canvas.drawLine(startX , startY, startX , endY, axisPaint);
+                //每个大的刻度处，画上 时间 文本
+                // PriceModel priceModel = chartModel.priceModelListVisible.get(i);
+                //String time = priceModel.getTime();
+                //canvas.drawText(time,startX + ((i+1) * kedu), startY,numberPaint);
+                // }else
+                if ((i + 1) % keduStride == 0) {
+                    canvas.drawLine(startX + ((i + 1) * kedu), startY, startX + ((i + 1) * kedu), endY, axisPaint);
                     //每个大的刻度处，画上 时间 文本
                     PriceModel priceModel = chartModel.priceModelListVisible.get(i);
                     String time = priceModel.getTime();
-                    canvas.drawText(time,startX + ((i+1) * kedu), startY,numberPaint);
+                    canvas.drawText(time, startX + ((i + 1) * kedu), startY, numberPaint);
 
-                    priceModelXCoordMap.put(priceModel,startX + ((i+1) * kedu));
-                }else {
+                    priceModelXCoordMap.put(priceModel, startX + ((i + 1) * kedu));
+                } else {
                     PriceModel priceModel = chartModel.priceModelListVisible.get(i);
-                    priceModelXCoordMap.put(priceModel,startX + ((i+1) * kedu));
+                    priceModelXCoordMap.put(priceModel, startX + ((i + 1) * kedu));
                 }
             }
             //数据分布分为两种情况，
             //1,平铺，所有数据平均铺开，显示在屏幕上
             //2，顺序排列，从左至右顺序排列，不一定到达屏幕宽度
-            //draw x kedu  value(12.1 12.5 12.9)
-            //int dataSize = chartModel.priceModelListVisible.size();
-            //float keduCapacity = dataSize / keduCount * 1.0f;
-           /* float keduCapacity = 3;
-            int keduCapacityI = (int) Math.floor(keduCapacity);
-            //two point px distance
-            float dataXStride = kedu / keduCapacityI * 1.000f;
-
-            for (int i = 0; i < keduCount; i++) {
-                int index = i * keduCapacityI;
-                PriceModel priceModel = chartModel.priceModelListVisible.get(index);
-                String time = priceModel.time;
-                //startY+3-->startY+30
-                canvas.drawText(time, startX + (i * kedu), startY + 30, numberPaint);
-            }*/
             //3,draw line,strip
             //draw points
-            chartModel.axisY.setAxisMaxMinValue(yMaxValue,yMinValue);
+            chartModel.axisY.setAxisMaxMinValue(yMaxValue, yMinValue);
             float unit = chartModel.axisY.getUnit();
 
-            Path path=new Path();
-            Log.i("info2","startY="+startY);
-        int xAxisKedu=    chartModel.axisX.getKedu();
+            Path path = new Path();
+            Log.i("info2", "startY=" + startY);
+            int xAxisKedu = chartModel.axisX.getKedu();
             for (int i = 0; i < dataSize; i++) {
                 PriceModel priceModel = chartModel.priceModelListVisible.get(i);
                 float fiveDayAvgPrice = priceModel.getFiveDayAvgPrice();
@@ -255,54 +274,57 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
                 //int  pricePx= (int) (fiveDayAvgPrice*unit);
                 float pricePx = (priceDiff * unit);
                 float priceY = startY - pricePx;
-                float priceX=startX+((i+1)*xAxisKedu);
+                float priceX = startX + ((i + 1) * xAxisKedu);
 
                 //canvas.drawCircle(priceX, priceY, 5, pointPaint);
-                Log.i("info2","priceX="+priceX+"-priceY="+priceY);
-                if(i==0){
-                    path.moveTo(priceX,priceY);
-                }else{
-                    path.lineTo(priceX,priceY);
+                Log.i("info2", "priceX=" + priceX + "-priceY=" + priceY);
+                if (i == 0) {
+                    path.moveTo(priceX, priceY);
+                } else {
+                    path.lineTo(priceX, priceY);
                 }
             }
 
             //draw lines
-            canvas.drawPath(path,pointPaint);
+            canvas.drawPath(path, pointPaint);
             //draw strip(a vertical line through vertical rectangle)
-            for (int i = 0; i <dataSize ; i++) {
-         PriceModel priceModel=chartModel.priceModelListVisible.get(i);
+            for (int i = 0; i < dataSize; i++) {
+                PriceModel priceModel = chartModel.priceModelListVisible.get(i);
                 //draw rect
-            float openPrice=    priceModel.getOpenPrice();
-                float closePrice=priceModel.getClosePrice();
-            float openPriceDiff=    openPrice-yMinValue;
-             float openPriceY=   openPriceDiff*lenValueAspect;
-                openPriceY=startY-openPriceY;
+                float openPrice = priceModel.getOpenPrice();
+                float closePrice = priceModel.getClosePrice();
+                float openPriceDiff = openPrice - yMinValue;
+                float openPriceY = openPriceDiff * lenValueAspect;
+                openPriceY = startY - openPriceY;
                 Float modelXCoord = priceModelXCoordMap.get(priceModel);
-                float openPriceX=modelXCoord-4;
-
-                float closePriceDiff=closePrice-yMinValue;
-                float closePriceY=closePriceDiff*lenValueAspect;
-                closePriceY=startY-closePriceY;
-                float closePriceX=modelXCoord+4;
+                Log.i("info2","strip scale factor="+mStripScaleFactor);
+                //stripSideOffsetPx*= mStripScaleFactor;
+                float xOffset=stripSideOffsetPx*scaleDiffInt;
+                float openPriceX = modelXCoord - stripSideOffsetPx;
+                Log.i("info2","modelXCoord="+modelXCoord+"-stripSideOffsetPx="+stripSideOffsetPx);
+                float closePriceDiff = closePrice - yMinValue;
+                float closePriceY = closePriceDiff * lenValueAspect;
+                closePriceY = startY - closePriceY;
+                float closePriceX = modelXCoord + stripSideOffsetPx;
 
                 int color = priceModel.getColor();
                 stripPaint.setColor(color);
 
-                canvas.drawRect(openPriceX,openPriceY,closePriceX,closePriceY,stripPaint);
-                Log.i("info2","openX="+openPriceX+"-openY="+openPriceY+"-closeX="+closePriceX+"-closeY="+closePriceY);
+                canvas.drawRect(openPriceX, openPriceY, closePriceX, closePriceY, stripPaint);
+                Log.i("info2", "openX=" + openPriceX + "-openY=" + openPriceY + "-closeX=" + closePriceX + "-closeY=" + closePriceY);
                 float topPrice = priceModel.getTopPrice();
                 float bottomPrice = priceModel.getBottomPrice();
 
-                float topPriceDiff=topPrice-yMinValue;
-                float topPriceDiffPx=topPriceDiff*lenValueAspect;
-                float topPriceY=startY-topPriceDiffPx;
+                float topPriceDiff = topPrice - yMinValue;
+                float topPriceDiffPx = topPriceDiff * lenValueAspect;
+                float topPriceY = startY - topPriceDiffPx;
 
-                float bottomPriceDiff=bottomPrice-yMinValue;
-                float bottomPriceDiffPx=bottomPriceDiff*lenValueAspect;
-                float bottomPriceY=startY-bottomPriceDiffPx;
+                float bottomPriceDiff = bottomPrice - yMinValue;
+                float bottomPriceDiffPx = bottomPriceDiff * lenValueAspect;
+                float bottomPriceY = startY - bottomPriceDiffPx;
 
-                float topPriceX=priceModelXCoordMap.get(priceModel);
-                canvas.drawLine(topPriceX,topPriceY,topPriceX,bottomPriceY,stripPaint);
+                float topPriceX = priceModelXCoordMap.get(priceModel);
+                canvas.drawLine(topPriceX, topPriceY, topPriceX, bottomPriceY, stripPaint);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -321,22 +343,22 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
         //单点触摸 区分 长按和拖动
         //两点触摸用于缩放
         int pointerCount = event.getPointerCount();
-        Log.i("info2","pointerCount="+pointerCount);
-        switch (pointerCount){
+        Log.i("info2", "pointerCount=" + pointerCount);
+        switch (pointerCount) {
             case 1:
                 //判断水平滑动距离
-                switch (event.getAction()){
+                switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                       lastX=  event.getX();
+                        lastX = event.getX();
                         break;
                     case MotionEvent.ACTION_MOVE:
-                     float currX=   event.getX();
-                     float xDiff=   currX-lastX;
+                        float currX = event.getX();
+                        float xDiff = currX - lastX;
                         //Log.i("info2","xDiff="+xDiff);
-                       int moveDelta= (int) xDiff / 10;
-                        Log.i("info2","moveDelta="+moveDelta);
+                        int moveDelta = (int) xDiff / 10;
+                        Log.i("info2", "moveDelta=" + moveDelta);
                         boolean ifReDraw = chartModel.cutPriceModel2(-moveDelta);
-                        if(ifReDraw){
+                        if (ifReDraw) {
                             invalidate();
                         }
                         break;
@@ -356,44 +378,67 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
     public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
         //scaleFactor，缩放图表时，同时可以缩放strip
         float scaleFactor = scaleGestureDetector.getScaleFactor();
-        mScaleFactor=scaleFactor;
-        Log.i("info2","scaleFactor="+scaleFactor);
-        if(lastScaleFactor==0){
-            lastScaleFactor=scaleFactor;
+        if(baseScaleFactor !=0){
+            //float aspect = scaleFactor / baseScaleFactor;
+            float diff = scaleFactor - baseScaleFactor;
+           float absDiff= Math.abs(diff);
+            if(absDiff>0.1){
+                if(diff>0){
+                    //chart scale up,
+                    mStripScaleFactor=1+diff;
+                }else if(diff<0){
+                    mStripScaleFactor=1-diff;
+                }
+            }
+            //Log.i("info2","scalePactor aspect="+aspect);
+        }
+        //mStripScaleFactor = scaleFactor;
+        Log.i("info2", "scaleFactor=" + scaleFactor);
+        if (baseScaleFactor == 0) {
+            baseScaleFactor = scaleFactor;
             //return false;
-           // return true;
-        }else {
+            // return true;
+        } else {
        /* if(scaleFactor==1.0){
             //return false;
             return true;
         }else*/
             if (scaleFactor < 1.0) {
                 //缩小，最多显示50条数据
-                float abs = Math.abs(scaleFactor - lastScaleFactor);
-                if(abs>=0.1){
+             float diff=   scaleFactor - baseScaleFactor;
+                float abs = Math.abs(diff);
+                if (abs >= 0.1) {
                     float scaleAspect = 1 + abs;
-                    Log.i("info2","scale down,scaleAspect="+scaleAspect);
+                    Log.i("info2", "scale down,scaleAspect=" + scaleAspect);
                     boolean ifScaleDataSuccess = chartModel.scaleData(scaleAspect);
                     if (ifScaleDataSuccess) {
+                      scaleDiffInt= (int) (diff*10);
                         invalidate();
                     }
-                    lastScaleFactor=scaleFactor;
+                    baseScaleFactor = scaleFactor;
                 }
 
             } else if (scaleFactor > 1.0) {
                 //放大，最少显示15条数据
-                float abs = Math.abs(scaleFactor - lastScaleFactor);
-                if(abs>=0.1){
+               float diff= scaleFactor - baseScaleFactor;
+                float abs = Math.abs(diff);
+                if (abs >= 0.1) {
                     float scaleAspect = 1 - abs;
                     boolean ifScaleDataSuccess = chartModel.scaleData(scaleAspect);
+                    //
                     if (ifScaleDataSuccess) {
+                      //scale data success,so chart view need scale,so strip need scale
+                        //if scale data fail,then chart view donot scale,strip neednot scale
+                        scaleDiffInt = (int) (diff*10);
                         invalidate();
+
                     }
                 }
-                lastScaleFactor = scaleFactor;
+                baseScaleFactor = scaleFactor;
             }
         }
         //return true;
+        
         return false;
     }
 
@@ -404,7 +449,7 @@ public class LineChartStripSV2 extends SurfaceView implements SurfaceHolder.Call
 
     @Override
     public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
-
+        baseScaleFactor =0;
     }
 
     /**

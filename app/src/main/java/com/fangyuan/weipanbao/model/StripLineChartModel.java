@@ -35,6 +35,7 @@ public class StripLineChartModel {
      * 最多截取30条数据
      */
     int initDataRange = 30;
+    //int stripSideOffset=0
     /**
      * start index,end index 是所有数据list中的index，用于平移visible data zone
      */

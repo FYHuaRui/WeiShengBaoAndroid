@@ -18,18 +18,13 @@ import com.fangyuan.weipanbao.adapter.ArrayWheelAdapter;
 import com.fangyuan.weipanbao.model.AxisModel;
 import com.fangyuan.weipanbao.model.PriceModel;
 import com.fangyuan.weipanbao.model.StripLineChartModel;
-import com.fangyuan.weipanbao.util.HttpPostUtil;
 import com.fangyuan.weipanbao.view.LineChartStripSV2;
 import com.fangyuan.weipanbao.view.OnWheelScrollListener;
 import com.fangyuan.weipanbao.view.WheelView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 public class MainActivity extends Activity implements View.OnClickListener, OnWheelScrollListener {
 
@@ -76,9 +71,39 @@ public class MainActivity extends Activity implements View.OnClickListener, OnWh
         StripLineChartModel chartModel=new StripLineChartModel(10,10,50,10,axisX,axisY,priceModelList);
         svChart.setData(chartModel);
 
-       //new HttpPostUtil().httpUrlConnection();
-    }
+       //new HttpReqManager().httpUrlConnection();
+        //methodA();O
 
+        //String jsonStr="{\"tab1\":[{\"name\":\"Tom\"},{\"pwd\":123}],\"tab2\":[{\"phoneNum\":\"123456\"},{\"city\":\"NanJing\"}]}";
+        String jsonStr=
+                "["
+                        +"{"
+                        +"\"type\":1,"
+                        +"\"content\":[{\"name\":\"Tom\"},{\"pwd\":123}]"
+                        +"},"
+                        +"{"
+                        +"\"type\":2,"
+                        +"\"content\":[{\"phoneNum\":\"123456\"},{\"city\":\"NanJing\"}]"
+                        +"}"
+                +"]";
+
+
+     // Obj obj=  JSON.parseObject(jsonStr, Obj.class);
+    // String value= (String) obj.tab1.get(0).get("name");
+       // Log.i("info2","value="+value);
+    }
+private  void methodA(){
+    //String str=null;
+//String str=new String("abc");
+    String[] arr={"abc","123"};
+    methodB(arr);
+    Log.i("info2","arr[0]="+arr[0]);
+}
+    private void methodB(String[] arr){
+        //str="hello";
+        //str=new String("hello");
+        arr[0]="hello";
+    }
     private float getOpenClosePrice(){
         //40.000-80.000
         //4-8
@@ -130,7 +155,9 @@ public class MainActivity extends Activity implements View.OnClickListener, OnWh
                 showPopMenu();
                 break;
             case R.id.ll_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
+                //Intent intent = new Intent(this, SettingsActivity.class);
+                //test
+                Intent intent=new Intent(this,WebViewActivity.class);
                 startActivity(intent);
                 break;
             case R.id.ll_personal_center:

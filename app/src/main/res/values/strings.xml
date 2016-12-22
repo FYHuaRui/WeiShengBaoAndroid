@@ -25,4 +25,8 @@
     <string name="issue_content">问题内容</string>
     <string name="user_feedback">用户反馈</string>
     <string name="catogory_tabs">分类标签</string>
+    <string name="register">注册</string>
+    <string name="plz_input_phone_number">请输入手机号码</string>
+    <string name="plz_input_pic_verify_code">请输入图形验证码</string>
+    <string name="request_verify_code">获取验证码</string>
 </resources>
