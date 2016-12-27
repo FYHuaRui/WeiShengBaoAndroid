@@ -40,13 +40,14 @@ import rx.schedulers.Schedulers;
  */
 public class RxNoHttp {
 
-    public static <T> void request(final Context context, final IParserRequest<T> request, final Subscriber<Response<T>> subscriber) {
+    public static <T> void request( final IParserRequest<T> request, final Subscriber<Response<T>> subscriber) {
         //final WaitDialog waitDialog = new WaitDialog(context);
        // waitDialog.show();
 
         Observable.create((Observable.OnSubscribe<Response<T>>) subscriberOut -> {
             // 最关键的就是用NoHttp的同步请求请求到response了，其它的都是rxjava做的，跟nohttp无关的。
             Response<T> response = NoHttp.startRequestSync(request);
+
             if (response.isSucceed()) subscriberOut.onNext(response);
             else subscriberOut.onError(response.getException());
             subscriberOut.onCompleted();

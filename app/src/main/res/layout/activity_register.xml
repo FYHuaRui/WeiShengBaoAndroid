@@ -1,127 +1,276 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-<!--title bar-->
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <!--title bar-->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp">
+
         <ImageView
+            android:id="@+id/iv_register_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@mipmap/icon_back"/>
-<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="@string/register"
-    android:layout_centerInParent="true"
-    android:textSize="25sp"/>
+            android:src="@mipmap/icon_back" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/register"
+            android:textSize="@dimen/title_font_size" />
     </RelativeLayout>
     <!--divider-->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#dcdcdc"/>
-    <!--phone number-->
+        android:background="#dcdcdc" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="60dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
+        android:layout_marginTop="@dimen/title_line_margin"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/page_padding_left"
+        android:paddingRight="@dimen/page_padding_left">
 
-        >
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/ic_launcher"/>
-        <EditText
-            android:id="@+id/et_phone_num"
+
+        <!--phone number-->
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/plz_input_phone_number"
-            android:background="@null"
-            android:layout_gravity="center_vertical"/>
+            android:background="@drawable/shape_round_corner_rectangle"
+            android:orientation="horizontal"
+            android:paddingBottom="@dimen/line_padding_top"
+            android:paddingLeft="@dimen/line_padding_left"
+            android:paddingTop="@dimen/line_padding_top">
+
+            <ImageView
+                android:layout_width="@dimen/icon_width"
+                android:layout_height="@dimen/icon_width"
+                android:layout_gravity="center_vertical"
+                android:src="@mipmap/icon_dengl_shouji" />
+
+            <EditText
+                android:id="@+id/et_phone_num"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/icon_text_margin_in_line"
+                android:background="@null"
+                android:hint="@string/plz_input_phone_number"
+                android:inputType="number"
+                android:textSize="@dimen/content_normal_font_size" />
+
+        </LinearLayout>
+        <!--pic verify code-->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/line_margin"
+            android:background="@drawable/shape_round_corner_rectangle"
+            android:paddingTop="@dimen/line_padding_top"
+            android:paddingBottom="@dimen/line_padding_top"
+            android:paddingRight="@dimen/line_padding_left"
+            android:paddingLeft="@dimen/line_padding_left"
+            >
+
+            <LinearLayout
+                android:id="@+id/ll_pic_vcode_answer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_width"
+                    android:layout_height="@dimen/icon_width"
+                    android:src="@mipmap/icon_dengl_graph" />
+
+                <EditText
+                    android:id="@+id/et_pic_vcode_answer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="@dimen/icon_text_margin_in_line"
+                    android:layout_marginRight="10dp"
+                    android:background="@null"
+                    android:hint="@string/plz_input_pic_verify_code"
+                    android:textSize="@dimen/content_normal_font_size" />
+
+            </LinearLayout>
+            <!--pic verify code -->
+            <!--<LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true">-->
+
+                <ImageView
+                    android:id="@+id/iv_request_pic_vcode"
+                    android:layout_width="120dp"
+                    android:layout_height="@dimen/icon_width"
+                    android:src="#dcdcdc"
+                    android:layout_alignParentRight="true"
+                    android:layout_toRightOf="@id/ll_pic_vcode_answer"
+                    android:layout_centerVertical="true"/>
+           <!-- </LinearLayout>-->
+        </RelativeLayout>
+        <!--sms verify code-->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/line_margin">
+            <RelativeLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_round_corner_rectangle"
+                android:paddingLeft="@dimen/line_padding_left"
+                >
+                <!--   <RelativeLayout
+                       android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"
+                       android:background="@mipmap/line_border"
+                       >-->
+
+
+
+
+                <ImageView
+                    android:id="@+id/iv_sms_verify_code"
+                    android:layout_width="@dimen/icon_width"
+                    android:layout_height="@dimen/icon_width"
+                    android:layout_centerVertical="true"
+                    android:src="@mipmap/icon_dengl_message"
+                    android:layout_marginTop="@dimen/line_padding_top"
+                    android:layout_marginBottom="@dimen/line_padding_top"/>
+
+                <EditText
+                    android:id="@+id/et_sms_verify_code"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="@dimen/icon_text_margin_in_line"
+                    android:layout_marginRight="15dp"
+                    android:layout_toRightOf="@id/iv_sms_verify_code"
+                    android:background="@null"
+                    android:hint="@string/plz_input_sms_verify_code"
+                    android:inputType="number"
+                    android:textSize="@dimen/content_normal_font_size"
+                    />
+
+                <!--       </RelativeLayout>-->
+
+                <!--<TextView
+                    android:id="@+id/tv_request_sms_vcode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_toRightOf="@id/et_sms_verify_code"
+
+                    android:gravity="center"
+                    android:background="@drawable/shape_round_corner_rectangle"
+
+                    android:text="@string/request_verify_code"
+                    android:textColor="#0086e9"
+                    android:textSize="@dimen/content_normal_font_size" />-->
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/tv_request_sms_vcode"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="right"
+                android:layout_toRightOf="@id/et_sms_verify_code"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:gravity="center"
+                android:background="@drawable/shape_round_corner_rectangle"
+
+                android:text="@string/request_verify_code"
+                android:textColor="#0086e9"
+                android:textSize="@dimen/content_normal_font_size" />
+        </FrameLayout>
+
+
+
+        <!--password-->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/line_margin"
+            android:background="@drawable/shape_round_corner_rectangle"
+            android:paddingBottom="@dimen/line_padding_top"
+            android:paddingLeft="@dimen/line_padding_left"
+            android:paddingTop="@dimen/line_padding_top">
+
+            <ImageView
+                android:id="@+id/iv_plz_input_password"
+                android:layout_width="@dimen/icon_width"
+                android:layout_height="@dimen/icon_width"
+                android:layout_centerVertical="true"
+                android:src="@mipmap/icon_dengl_password" />
+
+            <EditText
+                android:id="@+id/et_input_pwd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:background="@null"
+                android:layout_marginLeft="@dimen/icon_text_margin_in_line"
+                android:layout_toRightOf="@id/iv_plz_input_password"
+                android:hint="@string/plz_input_password"
+                android:textSize="@dimen/content_normal_font_size" />
+        </RelativeLayout>
+        <!--confirm password-->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/line_margin"
+            android:background="@drawable/shape_round_corner_rectangle"
+            android:paddingBottom="@dimen/line_padding_top"
+            android:paddingLeft="@dimen/line_padding_left"
+            android:paddingTop="@dimen/line_padding_top">
+
+            <ImageView
+                android:id="@+id/iv_confirm_password"
+                android:layout_width="@dimen/icon_width"
+                android:layout_height="@dimen/icon_width"
+                android:layout_centerVertical="true"
+                android:src="@mipmap/icon_dengl_lock" />
+
+            <EditText
+                android:id="@+id/et_confirm_pwd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:background="@null"
+                android:layout_marginLeft="@dimen/icon_text_margin_in_line"
+                android:layout_toRightOf="@id/iv_confirm_password"
+                android:hint="@string/plz_confirm_password"
+                android:textSize="@dimen/content_normal_font_size" />
+        </RelativeLayout>
 
     </LinearLayout>
-<!--pic verify code-->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="20dp">
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@mipmap/ic_launcher"/>
-            <EditText
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:hint="@string/plz_input_pic_verify_code"
-                android:background="@null"
-                android:layout_gravity="center_vertical"/>
 
-        </LinearLayout>
-<!--pic verify code -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true">
-            <ImageView
-                android:id="@+id/iv_request_pic_vcode"
-                android:layout_width="120dp"
-                android:layout_height="60dp"
-                android:src="@mipmap/ic_launcher"/>
-        </LinearLayout>
-    </RelativeLayout>
-    <!--sms verify code-->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="20dp">
-        <ImageView
-            android:id="@+id/iv_sms_verify_code"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/ic_launcher"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="@string/i_want_feedback"
-            android:layout_toRightOf="@id/iv_sms_verify_code"
-            android:layout_centerVertical="true"/>
-        <TextView
-            android:id="@+id/tv_request_verify_code"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/request_verify_code"
-            android:textSize="20sp"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"/>
-    </RelativeLayout>
-    <!--password-->
-    <!--confirm password-->
 
     <!--register button-->
     <TextView
+        android:id="@+id/tv_register"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/register"
-        android:textColor="#ffffffff"
-        android:textSize="25sp"
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/shape_round_corner_rectangle_solid_gray"
+        android:clickable="false"
         android:gravity="center"
         android:padding="10dp"
-        android:background="@mipmap/ic_login_disable"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="20dp"/>
+        android:text="@string/register"
+        android:textColor="#ffffffff"
+        android:textSize="25sp" />
 </LinearLayout>

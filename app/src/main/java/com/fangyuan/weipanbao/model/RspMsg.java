@@ -6,5 +6,5 @@ package com.fangyuan.weipanbao.model;
 
 public class RspMsg {
     public int runCode;
-    public String Msg;
+    public String runMsg;
 }
